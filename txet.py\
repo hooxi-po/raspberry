@@ -1,0 +1,43 @@
+import asyncio
+import websockets
+
+async def connect_websocket():
+    while True:
+        # 连接到 WebSocket 服务器
+        async with websockets.connect('ws://node.ljcljc.cn:8110') as websocket:
+            print("WebSocket 连接已建立")
+
+            # 发送提醒文字给服务器
+            reminder = "请发送舵机编号和角度数据"
+            await websocket.send(reminder)
+            print(f"已发送提醒文字：{reminder}")
+
+            # 等待接收舵机编号和角度数据
+            data = await websocket.recv()
+            print(f"收到数据：{data}")
+
+            # 解析舵机编号和角度数据
+            servo_number, angle = parse_data(data)
+
+            # 验证数据是否有效
+            if servo_number is not None and angle is not None:
+                print("数据有效")
+                # 在这里执行相应的操作
+            else:
+                print("数据无效")
+
+            # 添加适当的延时，以避免过于频繁地连接服务器
+            await asyncio.sleep(1)  # 可根据需要调整延时时间
+
+# 解析舵机编号和角度数据
+def parse_data(data):
+    try:
+        servo_number, angle = data.split(',')
+        servo_number = int(servo_number)
+        angle = int(angle)
+        return servo_number, angle
+    except (ValueError, TypeError):
+        return None, None
+
+# 运行 WebSocket 客户端
+asyncio.get_event_loop().run_until_complete(connect_websocket())
